@@ -1,0 +1,22 @@
+version: '3'
+services:
+  app:
+    container_name: app
+    build:
+      context: .
+      dockerfile: ./container/app/Dockerfile
+    volumes:
+      - ./src:/go/src
+    restart: always
+    tty: true
+    depends_on:
+      - db
+  db:
+    container_name: db
+    build:
+      context: .
+      dockerfile: ./container/db/Dockerfile
+    volumes:
+      - ./container/db/query_log:/try_go_clean_architecture/query_log
+    restart: always
+    tty: true
