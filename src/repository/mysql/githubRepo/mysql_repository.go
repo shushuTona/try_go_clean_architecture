@@ -1,7 +1,8 @@
-package mysql
+package githubRepo
 
 import (
 	"database/sql"
+	"fmt"
 	"try_go_clean_architecture/entities"
 )
 
@@ -15,16 +16,16 @@ func NewGithubRepoMysqlRepository(db *sql.DB) IMysqlRepository {
 	}
 }
 
-func (gr *githubRepoMysqlRepository) GetRepos() []entities.GithubRepo {
+func (gr *githubRepoMysqlRepository) GetRepos() ([]entities.GithubRepo, error) {
 	query := `SELECT id, name, updated_at FROM repos`
 	stmt, err := gr.db.Prepare(query)
 	if err != nil {
-		panic("db prepare error")
+		return nil, err
 	}
 
 	rows, err := stmt.Query()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -38,11 +39,42 @@ func (gr *githubRepoMysqlRepository) GetRepos() []entities.GithubRepo {
 			&githubRepo.UpdatedAt,
 		)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		githubRepoList = append(githubRepoList, githubRepo)
 	}
 
-	return githubRepoList
+	return githubRepoList, nil
+}
+
+func (gr *githubRepoMysqlRepository) InsertRepos(grlist []entities.GithubRepo) error {
+	// starts a transaction
+	tx, err := gr.db.Begin()
+	if err != nil {
+		fmt.Println("gr.db.Begin()")
+		return err
+	}
+
+	// create preoare
+	stmt, err := tx.Prepare("INSERT INTO repos (id, name, updated_at) VALUES( ?, ?, ? )")
+	if err != nil {
+		tx.Rollback()
+		fmt.Println("create stmt")
+		return err
+	}
+	defer stmt.Close()
+
+	// insert repository list
+	for _, githubRepo := range grlist {
+		if _, err := stmt.Exec(githubRepo.ID, githubRepo.Name, githubRepo.UpdatedAt); err != nil {
+			tx.Rollback()
+			fmt.Println("range loop")
+			return err
+		}
+	}
+
+	tx.Commit()
+
+	return nil
 }
