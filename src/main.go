@@ -16,7 +16,11 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-	var dist = os.Stdout
+	// var dist = os.Stdout
+	dist, err := os.OpenFile("./text.txt", os.O_APPEND|os.O_WRONLY, os.ModeAppend)
+	if err != nil {
+		panic(err.Error())
+	}
 
 	var githubReposController = controllers.GithubReposController{
 		GatewayFactory:   githubRepoGateway.NewGithubRepoMysqlGateway,
