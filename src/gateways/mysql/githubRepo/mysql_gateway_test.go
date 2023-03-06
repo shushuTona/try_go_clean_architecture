@@ -22,7 +22,7 @@ func TestGetRepos(t *testing.T) {
 	prep := mock.ExpectPrepare(query)
 	prep.ExpectQuery().WillReturnRows(rows)
 
-	githubRepoMysqlRepository := NewGithubRepoMysqlRepository(db)
+	githubRepoMysqlRepository := NewGithubRepoMysqlGateway(db)
 	githubRepoList, err := githubRepoMysqlRepository.GetRepos()
 
 	if err != nil {
@@ -54,7 +54,7 @@ func TestInsertRepos(t *testing.T) {
 	//  .WithArgs(999, "test name", "2023-01-01 00:00:00").WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
-	githubRepoMysqlRepository := NewGithubRepoMysqlRepository(db)
+	githubRepoMysqlRepository := NewGithubRepoMysqlGateway(db)
 	var grlist = []entities.GithubRepo{
 		{
 			ID:        999,

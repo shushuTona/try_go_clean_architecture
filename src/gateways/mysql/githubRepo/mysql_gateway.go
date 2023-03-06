@@ -6,17 +6,17 @@ import (
 	"try_go_clean_architecture/entities"
 )
 
-type githubRepoMysqlRepository struct {
+type githubRepoMysqlGateway struct {
 	db *sql.DB
 }
 
-func NewGithubRepoMysqlRepository(db *sql.DB) IMysqlRepository {
-	return &githubRepoMysqlRepository{
+func NewGithubRepoMysqlGateway(db *sql.DB) IMysqlGateway {
+	return &githubRepoMysqlGateway{
 		db: db,
 	}
 }
 
-func (gr *githubRepoMysqlRepository) GetRepos() ([]entities.GithubRepo, error) {
+func (gr *githubRepoMysqlGateway) GetRepos() ([]entities.GithubRepo, error) {
 	query := `SELECT id, name, updated_at FROM repos`
 	stmt, err := gr.db.Prepare(query)
 	if err != nil {
@@ -48,7 +48,7 @@ func (gr *githubRepoMysqlRepository) GetRepos() ([]entities.GithubRepo, error) {
 	return githubRepoList, nil
 }
 
-func (gr *githubRepoMysqlRepository) InsertRepos(grlist []entities.GithubRepo) error {
+func (gr *githubRepoMysqlGateway) InsertRepos(grlist []entities.GithubRepo) error {
 	// starts a transaction
 	tx, err := gr.db.Begin()
 	if err != nil {
