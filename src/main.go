@@ -1,50 +1,32 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
-	"time"
+	"os"
 
-	"github.com/go-sql-driver/mysql"
-
-	"try_go_clean_architecture/entities"
-	"try_go_clean_architecture/repository/mysql/githubRepo"
+	"try_go_clean_architecture/controllers"
+	"try_go_clean_architecture/drivers"
+	githubRepoGateway "try_go_clean_architecture/gateways/mysql/githubRepo"
+	"try_go_clean_architecture/presenters"
+	"try_go_clean_architecture/usecases"
 )
 
 func main() {
-	var jst, err = time.LoadLocation("Asia/Tokyo")
+	var db, err = drivers.CreateDB()
 	if err != nil {
-		panic("db error.")
+		panic(err.Error())
 	}
-	var c = mysql.Config{
-		DBName:    "db",
-		User:      "root",
-		Passwd:    "root",
-		Addr:      "db:3306",
-		Net:       "tcp",
-		ParseTime: true,
-		Collation: "utf8mb4_unicode_ci",
-		Loc:       jst,
+	var dist = os.Stdout
+
+	var githubReposController = controllers.GithubReposController{
+		GatewayFactory:   githubRepoGateway.NewGithubRepoMysqlGateway,
+		PresenterFactory: presenters.NewGithubReposPresenter,
+		UsecaseFactory:   usecases.NewDisplayGithubReposUseCase,
 	}
-	db, err := sql.Open("mysql", c.FormatDSN())
+
+	err = githubReposController.ShowRepos(db, dist)
+
 	if err != nil {
-		panic("db open error.")
+		fmt.Println(err.Error())
 	}
-
-	db.SetConnMaxLifetime(time.Minute * 3)
-	db.SetMaxOpenConns(10)
-	db.SetMaxIdleConns(10)
-
-	githubRepoMysqlRepository := githubRepo.NewGithubRepoMysqlRepository(db)
-
-	var grl = []entities.GithubRepo{
-		{
-			ID:        400,
-			Name:      "test repo 3",
-			UpdatedAt: "2023-03-05 09:00:00",
-		},
-	}
-	err = githubRepoMysqlRepository.InsertRepos(grl)
-
-	fmt.Println(err.Error())
 }
